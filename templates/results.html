@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis for {{ ticker }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <a href="/" class="text-teal-500 hover:text-teal-300">&larr; Back to Home</a>
+        <h1 class="text-4xl font-bold text-center my-8">Analysis for {{ ticker }}</h1>
+
+        <!-- This container will show the status of the background Celery task. -->
+        <div id="task-status-container" class="text-center mb-8 hidden">
+            <p id="task-status" class="text-lg text-teal-400"></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- ARIMA Plot Container -->
+            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-teal-400">ARIMA Forecast</h2>
+                <div id="arima-plot-container">
+                    <!-- A loading spinner is shown here until the plot is fetched from the server. -->
+                    <div id="arima-loading" class="flex justify-center items-center h-64">
+                        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-teal-500"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Reddit Sentiment Container -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-teal-400">Reddit Sentiment</h2>
+                <div id="sentiment-container">
+                    <!-- A loading spinner is shown here until the sentiment score is fetched. -->
+                    <div id="sentiment-loading" class="flex justify-center items-center h-64">
+                        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500"></div>
+                    </div>
+                    <!-- This div is hidden initially and will be populated with the sentiment score. -->
+                    <div id="sentiment-content" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-sm text-gray-500 text-center mt-8">Disclaimer: This is not financial advice. All data is for informational purposes only.</p>
+    </div>
+
+    <script>
+        // Get the ticker and task_id from the template variables passed by Flask.
+        const ticker = "{{ ticker }}";
+        const taskId = "{{ task_id }}";
+
+        // This function polls the /status/<task_id> endpoint to get the status of the Celery task.
+        function pollTaskStatus() {
+            // If there is no task ID, it means the data was served from cache, so we don't need to poll.
+            if (!taskId) {
+                document.getElementById('task-status-container').classList.add('hidden');
+                return;
+            }
+            document.getElementById('task-status-container').classList.remove('hidden');
+
+            const interval = setInterval(() => {
+                fetch(`/status/${taskId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusElement = document.getElementById('task-status');
+                        statusElement.textContent = `Analysis Status: ${data.state}... ${data.status}`;
+                        // If the task has succeeded or failed, we stop polling.
+                        if (data.state === 'SUCCESS' || data.state === 'FAILURE') {
+                            clearInterval(interval);
+                            if(data.state === 'SUCCESS') {
+                                statusElement.textContent = "Analysis complete.";
+                                // Hide the status message after 3 seconds.
+                                setTimeout(() => document.getElementById('task-status-container').classList.add('hidden'), 3000);
+                            }
+                        }
+                    });
+            }, 2000); // Poll every 2 seconds.
+        }
+
+        // This function fetches the analysis data from our /data/<ticker> endpoint.
+        function fetchData() {
+            fetch(`/data/${ticker}`)
+                .then(response => response.json())
+                .then(data => {
+                    const arimaContainer = document.getElementById('arima-plot-container');
+                    const sentimentContent = document.getElementById('sentiment-content');
+
+                    // If the arima_plot data is available, we inject it into the page.
+                    if (data.arima_plot) {
+                        arimaContainer.innerHTML = data.arima_plot;
+                    } else {
+                        // If the data is not ready yet, we wait 2 seconds and try again.
+                        setTimeout(fetchData, 2000);
+                    }
+
+                    // If the sentiment data is available, we display it.
+                    if (data.sentiment !== null) {
+                        document.getElementById('sentiment-loading').classList.add('hidden');
+                        let sentimentClass = "text-gray-400"; // Default to neutral color
+                        if (data.sentiment > 0.1) sentimentClass = "text-green-500"; // Positive
+                        if (data.sentiment < -0.1) sentimentClass = "text-red-500"; // Negative
+
+                        sentimentContent.innerHTML = `<p class="text-3xl font-bold ${sentimentClass}">${data.sentiment.toFixed(2)}</p><p class="text-sm text-gray-500">Compound Score</p>`;
+                        sentimentContent.classList.remove('hidden');
+                    } else {
+                        // If the data is not ready yet, we wait 2 seconds and try again.
+                        setTimeout(fetchData, 2000);
+                    }
+                });
+        }
+
+        // When the page is loaded, we start polling for the task status and the data.
+        document.addEventListener('DOMContentLoaded', () => {
+            pollTaskStatus();
+            fetchData();
+        });
+    </script>
+</body>
+</html>

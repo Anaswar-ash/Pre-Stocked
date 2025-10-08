@@ -1,0 +1,12 @@
+flask
+yfinance
+pandas
+statsmodels
+plotly
+praw
+vaderSentiment
+python-dotenv
+celery
+redis
+psycopg2-binary
+SQLAlchemy
