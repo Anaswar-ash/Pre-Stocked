@@ -1,9 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from a .env file.
-# This is the standard way to manage configuration and secrets in a modern Python application.
-load_dotenv()
+# Construct the path to the .env file.
+# We assume that the .env file is located in the same directory as this config.py file.
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+
+# Load environment variables from the specified .env file.
+load_dotenv(dotenv_path=dotenv_path)
 
 class Config:
     """Configuration class for the Flask application.

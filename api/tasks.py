@@ -1,8 +1,8 @@
 from celery import Celery
-from config import Config
-import analysis_engine
-import hybrid_analysis
-from database import SessionLocal, AnalysisResult
+from .config import Config
+from . import analysis_engine
+from . import hybrid_analysis
+from .database import SessionLocal, AnalysisResult
 import datetime
 
 # Create a Celery application instance.

@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, request, send_from_directory
-from config import Config
-from database import SessionLocal, init_db, AnalysisResult
-from tasks import run_full_analysis, run_hybrid_analysis_task
+from .config import Config
+from .database import SessionLocal, init_db, AnalysisResult
+from .tasks import run_full_analysis, run_hybrid_analysis_task
 import datetime
 import os
 
 # Create and configure the Flask application
-app = Flask(__name__, static_folder='frontend/build')
+app = Flask(__name__, static_folder='../frontend/build')
 app.config.from_object(Config)
 
 # Initialize the database by creating tables if they don't exist
@@ -20,6 +20,42 @@ def serve(path):
         return send_from_directory(app.static_folder, path)
     else:
         return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    """Handles the form submission for stock analysis.
+
+    This route is triggered when the user submits the stock ticker.
+    It validates the ticker, checks for a recent cached result in the database,
+    and if no fresh result is found, it starts a new background analysis task.
+    """
+    ticker = request.form.get('ticker').upper()
+    if not ticker or not ticker.isalnum() or not 2 <= len(ticker) <= 5:
+        return jsonify({'error': 'Invalid ticker symbol.'}), 400
+
+    db = SessionLocal()
+    try:
+        # Check for a recent cached result (e.g., within the last hour)
+        # This helps to reduce redundant analyses and provide faster responses.
+        cache_time_limit = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+        cached_result = db.query(AnalysisResult).filter(
+            AnalysisResult.ticker == ticker,
+            AnalysisResult.last_updated > cache_time_limit
+        ).first()
+
+        if cached_result and cached_result.arima_plot:
+            # If a fresh result is found in the cache, return the task_id as None
+            return jsonify({'task_id': None})
+
+    finally:
+        db.close()
+
+    # If no fresh cache is found, start the background analysis task using Celery.
+    # .delay() is the method to call a Celery task asynchronously.
+    task = run_full_analysis.delay(ticker)
+    # Redirect to the results page, passing the task ID.
+    # The frontend will use this ID to poll for the task's status.
+    return jsonify({'task_id': task.id})
 
 @app.route('/status/<task_id>')
 def task_status(task_id):
@@ -77,11 +113,6 @@ def hybrid_analyze():
     task = run_hybrid_analysis_task.delay(ticker)
     return jsonify({'task_id': task.id})
 
-@app.route('/hybrid_result/<ticker>')
-def hybrid_result(ticker):
-    """Renders the hybrid results page."""
-    return render_template('hybrid_results.html', ticker=ticker)
-
 @app.route('/hybrid_data/<ticker>')
 def hybrid_data(ticker):
     """API endpoint for the frontend to fetch the latest hybrid analysis data from the database."""
@@ -96,8 +127,3 @@ def hybrid_data(ticker):
             return jsonify({'hybrid_plot': None})
     finally:
         db.close()
-
-if __name__ == '__main__':
-    # This allows the application to be run directly with `python app.py` for development.
-    # The debug=True flag enables auto-reloading and a debugger.
-    app.run(debug=True)
