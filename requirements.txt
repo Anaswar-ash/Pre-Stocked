@@ -10,3 +10,6 @@ celery
 redis
 psycopg2-binary
 SQLAlchemy
+tensorflow
+transformers
+torch

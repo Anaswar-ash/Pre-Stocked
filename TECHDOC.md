@@ -1,6 +1,8 @@
 
 # Technical Documentation
 
+**Author:** Ash
+
 This document provides a technical overview of the Pre-Stocked application.
 
 ## System Architecture

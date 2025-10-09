@@ -35,6 +35,7 @@ class AnalysisResult(Base):
     sentiment = Column(Float)
     # The Reddit posts are stored as a string representation of a list of dictionaries.
     sentiment_posts = Column(Text)
+    hybrid_plot = Column(Text) # Store the HTML for the hybrid plot
     # The last_updated timestamp is used to determine if the cached data is fresh enough to be used.
     last_updated = Column(DateTime, default=datetime.datetime.utcnow)
 

@@ -1,5 +1,7 @@
 # Pre-Stocked: A Stock Analysis & Forecasting Tool
 
+**Author:** Ash
+
 Pre-Stocked is a web-based application that provides in-depth stock analysis by combining time-series forecasting with Reddit sentiment analysis. It is built with a robust backend that uses asynchronous tasks to ensure a non-blocking user experience.
 
 ## Features

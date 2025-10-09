@@ -1,12 +1,12 @@
 from celery import Celery
 from config import Config
 import analysis_engine
+import hybrid_analysis
 from database import SessionLocal, AnalysisResult
 import datetime
 
 # Create a Celery application instance.
-# The first argument is the name of the current module.
-# The broker and backend URLs are configured from our Config class.
+# We configure it with the broker and backend URLs from our config file.
 celery_app = Celery(__name__, broker=Config.CELERY_BROKER_URL, backend=Config.CELERY_RESULT_BACKEND)
 
 @celery_app.task
@@ -87,4 +87,41 @@ def run_full_analysis(ticker_symbol):
 
     finally:
         # Ensure the database session is always closed to prevent connection leaks.
+        db.close()
+
+@celery_app.task
+def run_hybrid_analysis_task(ticker_symbol):
+    """Celery task to run the hybrid analysis and store it in the database."""
+    db = SessionLocal()
+    try:
+        # --- Get Base Analysis Data ---
+        info, hist = analysis_engine.get_stock_data(ticker_symbol)
+        if info is None:
+            return {'error': f"Could not fetch data for {ticker_symbol.upper()}."}
+
+        # --- Run Individual Models ---
+        arima_forecast, forecast_dates = analysis_engine.forecast_stock_price(hist)
+        lstm_forecast = hybrid_analysis.forecast_with_lstm(hist)
+        _, posts, _ = analysis_engine.get_reddit_sentiment(ticker_symbol)
+        finbert_sentiment = hybrid_analysis.get_finbert_sentiment(posts)
+
+        # --- Run Ensemble Prediction ---
+        ensemble_forecast = hybrid_analysis.run_ensemble_prediction(arima_forecast, lstm_forecast, finbert_sentiment)
+
+        # --- Create Plot ---
+        hybrid_plot_html = analysis_engine.create_plot(hist, ensemble_forecast, forecast_dates, ticker_symbol)
+
+        # --- Database Update ---
+        result = db.query(AnalysisResult).filter(AnalysisResult.ticker == ticker_symbol).first()
+        if not result:
+            result = AnalysisResult(ticker=ticker_symbol)
+            db.add(result)
+        
+        result.hybrid_plot = hybrid_plot_html
+        result.last_updated = datetime.datetime.utcnow()
+        db.commit()
+
+        return {'status': 'complete', 'ticker': ticker_symbol}
+
+    finally:
         db.close()

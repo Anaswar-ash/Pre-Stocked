@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, url_for, redirect
 from config import Config
 from database import SessionLocal, init_db, AnalysisResult
-from tasks import run_full_analysis
+from tasks import run_full_analysis, run_hybrid_analysis_task
 import datetime
 
 # Create and configure the Flask application
@@ -106,6 +106,36 @@ def get_data(ticker):
             # This case occurs if the frontend polls for data before the task has saved anything.
             # The frontend will continue to poll this endpoint until it receives data.
             return jsonify({'arima_plot': None, 'sentiment': None, 'posts': None})
+    finally:
+        db.close()
+
+@app.route('/hybrid_analyze', methods=['POST'])
+def hybrid_analyze():
+    """Handles the request to start a hybrid analysis task."""
+    ticker = request.form.get('ticker').upper()
+    if not ticker or not ticker.isalnum() or not 2 <= len(ticker) <= 5:
+        return jsonify({'error': 'Invalid ticker symbol.'}), 400
+
+    task = run_hybrid_analysis_task.delay(ticker)
+    return jsonify({'task_id': task.id})
+
+@app.route('/hybrid_result/<ticker>')
+def hybrid_result(ticker):
+    """Renders the hybrid results page."""
+    return render_template('hybrid_results.html', ticker=ticker)
+
+@app.route('/hybrid_data/<ticker>')
+def hybrid_data(ticker):
+    """API endpoint for the frontend to fetch the latest hybrid analysis data from the database."""
+    db = SessionLocal()
+    try:
+        result = db.query(AnalysisResult).filter(AnalysisResult.ticker == ticker).first()
+        if result and result.hybrid_plot:
+            return jsonify({
+                'hybrid_plot': result.hybrid_plot
+            })
+        else:
+            return jsonify({'hybrid_plot': None})
     finally:
         db.close()
 
