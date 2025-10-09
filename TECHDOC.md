@@ -62,6 +62,13 @@ The application is built on a modern, asynchronous architecture designed for res
 
 *   **`Config`:** A class that loads all configuration from environment variables.
 
+### `hybrid_analysis.py`
+
+*   **`create_lstm_model()`:** Creates a simple LSTM model for time-series forecasting.
+*   **`forecast_with_lstm()`:** Forecasts stock prices using the LSTM model.
+*   **`get_finbert_sentiment()`:** Analyzes sentiment of Reddit posts using FinBERT.
+*   **`run_ensemble_prediction()`:** Combines predictions from multiple models using a weighted average.
+
 ## Sentiment-Based Forecast Adjustment
 
 The forecast is adjusted using a linear scaling factor based on the compound sentiment score from `vaderSentiment`:

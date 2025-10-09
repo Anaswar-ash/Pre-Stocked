@@ -6,6 +6,7 @@ function App() {
     const [analysis, setAnalysis] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [analysisType, setAnalysisType] = useState('simple');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -15,6 +16,7 @@ function App() {
 
         const formData = new FormData();
         formData.append('ticker', ticker);
+        formData.append('analysis_type', analysisType);
 
         try {
             const response = await fetch('/analyze', {
@@ -68,7 +70,8 @@ function App() {
 
     const fetchData = async (ticker) => {
         try {
-            const response = await fetch(`/data/${ticker}`);
+            let url = analysisType === 'simple' ? `/data/${ticker}` : `/hybrid_data/${ticker}`;
+            const response = await fetch(url);
             const data = await response.json();
             setAnalysis(data);
         } catch (error) {
@@ -91,8 +94,11 @@ function App() {
                         placeholder="Enter stock ticker (e.g., AAPL)"
                         required
                     />
-                    <button type="submit" disabled={loading}>
-                        {loading ? 'Analyzing...' : 'Analyze'}
+                    <button type="submit" disabled={loading} onClick={() => setAnalysisType('simple')}>
+                        {loading && analysisType === 'simple' ? 'Analyzing...' : 'Analyze'}
+                    </button>
+                    <button type="submit" disabled={loading} onClick={() => setAnalysisType('hybrid')}>
+                        {loading && analysisType === 'hybrid' ? 'Analyzing...' : 'Hybrid Analyze'}
                     </button>
                 </form>
 
@@ -103,6 +109,9 @@ function App() {
                         <h2>Analysis for {ticker.toUpperCase()}</h2>
                         {analysis.arima_plot && (
                             <div dangerouslySetInnerHTML={{ __html: analysis.arima_plot }} />
+                        )}
+                        {analysis.hybrid_plot && (
+                            <div dangerouslySetInnerHTML={{ __html: analysis.hybrid_plot }} />
                         )}
                         {analysis.sentiment !== null && (
                             <p>Sentiment: {analysis.sentiment}</p>

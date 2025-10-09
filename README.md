@@ -23,6 +23,14 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
 6.  **Sentiment Adjustment:** The initial ARIMA forecast is adjusted based on the calculated sentiment score.
 7.  **Final Result:** The final, sentiment-adjusted forecast is stored in the database and displayed to the user.
 
+## Hybrid Analysis
+
+This project also includes a more advanced "hybrid" analysis that combines multiple models for a more robust forecast:
+
+*   **LSTM Forecasting:** A Long Short-Term Memory (LSTM) neural network is used for time-series forecasting, offering a more sophisticated alternative to ARIMA.
+*   **FinBERT Sentiment Analysis:** We use FinBERT, a language model specifically pre-trained on financial text, to provide a more nuanced sentiment analysis than the default `vaderSentiment` library.
+*   **Ensemble Model:** The final hybrid forecast is an ensemble of the ARIMA and LSTM models, weighted by the FinBERT sentiment score.
+
 ## Getting Started
 
 ### Prerequisites
@@ -48,7 +56,7 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
     ```
 
 3.  **Set up your environment variables:**
-    Create a `.env` file in the project root and add the following, replacing the placeholder values with your actual credentials:
+    Create a `.env` file in the `api` directory and add the following, replacing the placeholder values with your actual credentials:
     ```
     FLASK_SECRET_KEY='a_super_secret_key'
     DATABASE_URL='postgresql://user:password@host:port/database'
@@ -65,8 +73,8 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
 5.  **Start the services:**
     You will need to run the Flask application, Redis server, and a Celery worker.
     *   **Redis:** `redis-server`
-    *   **Celery Worker:** `celery -A tasks.celery_app worker --loglevel=info`
-    *   **Flask App:** `python app.py`
+    *   **Celery Worker:** `celery -A api.tasks.celery_app worker --loglevel=info`
+    *   **Flask App:** `python run.py`
 
 6.  Open your web browser and navigate to `http://127.0.0.1:5000`.
 

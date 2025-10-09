@@ -39,3 +39,7 @@ class Config:
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
     # The URL for the result backend (also Redis). Celery uses this to store the results and status of tasks.
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+
+    # --- Cache Configuration ---
+    # The time in hours to cache the analysis results.
+    CACHE_TIME = int(os.environ.get('CACHE_TIME', 1))

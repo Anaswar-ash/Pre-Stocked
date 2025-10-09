@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from .config import Config
 
 # Create a database engine using the URL from our configuration.
@@ -12,11 +12,14 @@ engine = create_engine(Config.DATABASE_URL)
 # Create a configured "Session" class. This class will be used to create new database sessions.
 # A session is a workspace for all the objects loaded or associated with it.
 # It provides the entry point to query the database.
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
 
 # Create a base class for our declarative models.
 # All of our database models will inherit from this class.
 Base = declarative_base()
+Base.query = db_session.query_property()
 
 class AnalysisResult(Base):
     """SQLAlchemy model for the analysis_results table.
