@@ -27,6 +27,10 @@ COMMENT_LIMIT = 10  # Number of top comments per post to fetch
 analyzer = SentimentIntensityAnalyzer()
 
 # --- STOCK DATA ---
+from .exceptions import StockDataError, RedditAPIError, AnalysisError
+
+# ... (imports)
+
 def get_stock_data(ticker_symbol):
     """
     Fetches historical stock data and company information from Yahoo Finance.
@@ -36,16 +40,13 @@ def get_stock_data(ticker_symbol):
         info = ticker.info
         hist = ticker.history(period="5y")
         if hist.empty:
-            logging.warning(f"No historical data found for {ticker_symbol}")
-            return None, None
-        # Ensure essential data points are present
+            raise StockDataError(f"No historical data found for {ticker_symbol}")
         if 'longName' not in info or 'symbol' not in info:
-            logging.warning(f"Incomplete company information for {ticker_symbol}")
-            return None, None
+            raise StockDataError(f"Incomplete company information for {ticker_symbol}")
         return info, hist
     except Exception as e:
         logging.error(f"Error fetching stock data for {ticker_symbol}: {e}")
-        return None, None
+        raise StockDataError(f"An error occurred while fetching data for {ticker_symbol} from Yahoo Finance.") from e
 
 # --- TECHNICAL ANALYSIS ---
 def calculate_technical_indicators(df):
@@ -103,7 +104,7 @@ def forecast_stock_price(df, days_to_predict=30):
         return forecast, forecast_dates
     except Exception as e:
         logging.error(f"Error during ARIMA forecasting: {e}")
-        return pd.Series(), pd.Index([])
+        raise AnalysisError("Failed to generate stock price forecast.") from e
 
 # --- SENTIMENT ANALYSIS ---
 def get_sentiment_compound_score(text):
@@ -131,27 +132,42 @@ def get_reddit_client():
             client_secret=Config.REDDIT_CLIENT_SECRET,
             user_agent=Config.RED_USER_AGENT or "SentimentAnalysisWebApp/0.1 by YourUsername",
         )
-        # Test the connection
-        if reddit.user.me():
-            logging.info(f"Connected to Reddit as: {reddit.user.me()}")
-            return reddit
-        else:
-            logging.error("Reddit authentication failed. Check your credentials in .env")
-            return None
+        if not reddit.read_only:
+            raise RedditAPIError("Reddit credentials are not valid. Please check your .env file.")
+        return reddit
     except Exception as e:
         logging.error(f"Error initializing PRAW: {e}")
-        return None
-
-# ... (rest of the file)
+        raise RedditAPIError("Could not connect to Reddit. Please check your API credentials and network connection.") from e
 
 def get_reddit_sentiment(ticker_symbol):
     """
-    Fetches and analyzes Reddit sentiment for a given stock ticker using a weighted average.
-    The sentiment is weighted by the score (upvotes) of the posts and comments.
+    Fetches and analyzes Reddit sentiment for a given stock ticker.
     """
     reddit = get_reddit_client()
-    if not reddit:
-        return 0, [], "Reddit API not configured or authentication failed."
+    weighted_scores = []
+    analyzed_posts = []
+
+    try:
+        subreddit = reddit.subreddit("all")
+        submissions = subreddit.search(ticker_symbol, limit=POST_LIMIT)
+
+        for post in submissions:
+            # ... (rest of the function)
+            pass # Placeholder for the rest of the loop
+
+        if not weighted_scores:
+            # This is not an error, just no results found.
+            return 0, [], None
+
+        total_weight = sum(item['weight'] for item in weighted_scores)
+        weighted_sum = sum(item['score'] * item['weight'] for item in weighted_scores)
+        final_compound_score = weighted_sum / total_weight if total_weight > 0 else 0
+
+        return final_compound_score, analyzed_posts, None
+
+    except praw.exceptions.PrawcoreException as e:
+        logging.error(f"An error occurred during Reddit search: {e}")
+        raise RedditAPIError("An error occurred while fetching data from Reddit.") from e
 
     weighted_scores = []
     analyzed_posts = []

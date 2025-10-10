@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import AnalysisForm from './components/AnalysisForm';
+import ResultsDisplay from './components/ResultsDisplay';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorMessage from './components/ErrorMessage';
 
 function App() {
     const [ticker, setTicker] = useState('');
@@ -57,7 +61,7 @@ function App() {
                     fetchData(ticker);
                 } else if (data.state === 'FAILURE') {
                     clearInterval(interval);
-                    setError('Analysis failed. Please try again.');
+                    setError(data.status || 'Analysis failed. Please try again.');
                     setLoading(false);
                 }
             } catch (error) {
@@ -86,44 +90,17 @@ function App() {
                 <h1>Stock Analysis</h1>
             </header>
             <main>
-                <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        value={ticker}
-                        onChange={(e) => setTicker(e.target.value)}
-                        placeholder="Enter stock ticker (e.g., AAPL)"
-                        required
-                    />
-                    <button type="submit" disabled={loading} onClick={() => setAnalysisType('simple')}>
-                        {loading && analysisType === 'simple' ? 'Analyzing...' : 'Analyze'}
-                    </button>
-                    <button type="submit" disabled={loading} onClick={() => setAnalysisType('hybrid')}>
-                        {loading && analysisType === 'hybrid' ? 'Analyzing...' : 'Hybrid Analyze'}
-                    </button>
-                </form>
+                <AnalysisForm
+                    handleSubmit={handleSubmit}
+                    ticker={ticker}
+                    setTicker={setTicker}
+                    loading={loading}
+                    setAnalysisType={setAnalysisType}
+                />
 
-                {error && <p className="error">{error}</p>}
-
-                {analysis && (
-                    <div className="results">
-                        <h2>Analysis for {ticker.toUpperCase()}</h2>
-                        {analysis.arima_plot && (
-                            <div dangerouslySetInnerHTML={{ __html: analysis.arima_plot }} />
-                        )}
-                        {analysis.hybrid_plot && (
-                            <div dangerouslySetInnerHTML={{ __html: analysis.hybrid_plot }} />
-                        )}
-                        {analysis.sentiment !== null && (
-                            <p>Sentiment: {analysis.sentiment}</p>
-                        )}
-                        {analysis.posts && (
-                            <div>
-                                <h3>Reddit Posts</h3>
-                                <pre>{analysis.posts}</pre>
-                            </div>
-                        )}
-                    </div>
-                )}
+                {error && <ErrorMessage message={error} />}
+                {loading && <LoadingSpinner />}
+                {analysis && <ResultsDisplay analysis={analysis} ticker={ticker} />}
             </main>
         </div>
     );
