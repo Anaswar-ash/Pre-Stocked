@@ -4,53 +4,40 @@ This project is a well-structured web application for stock analysis that combin
 
 ## Strengths:
 
-*   **Clear Architecture:** The project is organized into a Flask backend and a React frontend.
+*   **Clear Architecture:** The project is well-organized into a Flask backend and a React frontend.
 *   **Asynchronous Tasks:** It uses Celery and Redis to run analysis in the background, which keeps the UI responsive.
+*   **Component-Based Frontend:** The frontend is broken down into reusable components, which improves maintainability.
+*   **Robust Error Handling:** The backend uses custom exceptions to provide specific error messages to the frontend.
 *   **Hybrid Analysis:** The application uses a sophisticated approach by combining multiple models (ARIMA, LSTM, FinBERT) for its analysis.
-*   **Good Documentation:** The `README.md` and `TECHDOC.md` files provide a good overview of the project.
+*   **Good Documentation:** The project includes good technical and user-facing documentation.
 
 ## Weaknesses:
 
-*   **Lack of Tests:** There is no test suite for the application's logic, which makes it difficult to maintain and extend.
-*   **Basic UI:** The user interface is functional but could be improved.
+*   **Lack of Tests:** There is no automated test suite for the application's logic.
+*   **UI/UX could be polished:** While functional, the user interface could be improved with a more professional design and user experience.
 
 ## Program Flow:
 
 1.  **User Interaction (Frontend):**
-    *   User enters a stock ticker and selects an analysis type (simple or hybrid) in the React frontend.
-    *   A `POST` request is sent to the `/analyze` endpoint on the Flask backend.
+    *   The user interacts with the `AnalysisForm` component to enter a stock ticker and choose an analysis type.
+    *   On submission, a `POST` request is sent to the `/analyze` endpoint.
 
-2.  **Backend Request Handling (Flask):**
-    *   The `/analyze` route in `api/__init__.py` receives the request.
-    *   It validates the ticker and checks for a recent cached result in the PostgreSQL database.
-    *   If a fresh cached result exists, it returns a response to the frontend, and the process ends.
-    *   If no fresh cache is found, it starts a background task (`run_full_analysis` or `run_hybrid_analysis_task`) using Celery.
+2.  **Backend Request Handling (Flask):
+    *   The `/analyze` route starts a Celery background task (`run_full_analysis` or `run_hybrid_analysis_task`).
     *   It returns a `task_id` to the frontend.
 
 3.  **Frontend Polling:**
-    *   The frontend receives the `task_id` and starts polling the `/status/<task_id>` endpoint every 5 seconds.
+    *   The frontend polls the `/status/<task_id>` endpoint every 5 seconds.
 
-4.  **Backend Task Status:**
-    *   The `/status/<task_id>` route checks the state of the Celery task.
-    *   It returns the task's status (`PENDING`, `PROGRESS`, `SUCCESS`, or `FAILURE`) to the frontend.
+4.  **Asynchronous Analysis (Celery):
+    *   The Celery worker executes the task.
+    *   **Error Handling:** If an error occurs (e.g., invalid ticker, Reddit API failure), the task raises a custom exception (`StockDataError`, `RedditAPIError`, etc.). The task's state is set to `FAILURE`, and the error message is stored.
+    *   If successful, the results are stored in the PostgreSQL database.
 
-5.  **Asynchronous Analysis (Celery):**
-    *   The Celery worker picks up the task from the Redis message broker.
-    *   The task (`run_full_analysis` or `run_hybrid_analysis_task` in `api/tasks.py`) executes the analysis steps:
-        *   Fetches stock data from Yahoo Finance.
-        *   Calculates technical indicators.
-        *   Performs time-series forecasting (ARIMA, LSTM).
-        *   Analyzes Reddit sentiment (Vader, FinBERT).
-        *   Adjusts the forecast based on sentiment.
-        *   Stores the results in the PostgreSQL database.
-    *   The task updates its state and progress information, which is accessible via the `/status/<task_id>` endpoint.
+5.  **Backend Task Status:**
+    *   The `/status/<task_id>` route returns the task's state.
+    *   If the state is `FAILURE`, it returns the specific error message.
 
-6.  **Frontend Data Fetching:**
-    *   Once the frontend sees that the task is `SUCCESS`ful, it stops polling.
-    *   It then sends a `GET` request to `/data/<ticker>` or `/hybrid_data/<ticker>` to fetch the final analysis data from the database.
-
-7.  **Backend Data Serving:**
-    *   The `/data/<ticker>` or `/hybrid_data/<ticker>` route queries the database for the results and returns them as JSON to the frontend.
-
-8.  **Frontend Display:**
-    *   The frontend receives the data and displays the Plotly chart, sentiment score, and other analysis results to the user.
+6.  **Frontend Display:**
+    *   If the frontend receives a `FAILURE` state, it displays the specific error message to the user using the `ErrorMessage` component.
+    *   If the task is `SUCCESS`ful, the frontend fetches the data from `/data/<ticker>` or `/hybrid_data/<ticker>` and displays it using the `ResultsDisplay` component.

@@ -1,89 +1,62 @@
 # Pre-Stocked Frontend
 
-This is the React frontend for the Pre-Stocked application. It provides the user interface for entering a stock ticker, selecting an analysis type, and viewing the results.
+This document provides a detailed overview of the React frontend for the Pre-Stocked application.
 
-It is bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
 
-## Backend Connection
+The frontend is a **Single Page Application (SPA)** built with [React](https://reactjs.org/) and bootstrapped with [Create React App](https://github.com/facebook/create-react-app). It provides a user interface for entering a stock ticker, selecting an analysis type, and viewing the results.
 
-This frontend is designed to work with the Flask backend of the Pre-Stocked application. It makes API calls to the following endpoints:
+## Running the Frontend in Development
 
-*   `POST /analyze`: To start a new analysis.
-*   `GET /status/<task_id>`: To poll for the status of an analysis task.
-*   `GET /data/<ticker>`: To fetch the results of a simple analysis.
-*   `GET /hybrid_data/<ticker>`: To fetch the results of a hybrid analysis.
+For professional development, it is recommended to run the frontend and backend servers separately. This allows you to take advantage of React's **hot-reloading** feature, where changes to the frontend code are instantly visible in the browser without a full page refresh.
 
-In a development environment, you can use the `proxy` setting in `package.json` to proxy these requests to the Flask backend.
+1.  **Start the Backend:** In one terminal, start the Flask server and the Celery worker as described in the main project `README.md`.
+
+2.  **Start the Frontend:** In a second terminal, navigate to the `frontend` directory and run:
+    ```bash
+    npm start
+    ```
+
+3.  **View the App:** A new browser tab will automatically open to `http://localhost:3000`. You can now make changes to the frontend code in the `src` directory, and they will be reflected live in the browser.
+
+### How API Requests Work in Development
+
+This project is configured to proxy API requests from the React development server (on port 3000) to the Flask backend server (on port 5000). This is handled by the `"proxy": "http://localhost:5000"` setting in `package.json`. This avoids Cross-Origin Resource Sharing (CORS) errors during development.
+
+## Project Structure
+
+The frontend code is organized into a component-based architecture:
+
+*   **`public/`**: Contains the main `index.html` shell for the application.
+*   **`src/`**: Contains all the React source code.
+    *   **`App.js`**: The main container component. It manages the application's state and the logic for communicating with the backend API.
+    *   **`index.js`**: The entry point for the React application.
+    *   **`App.css` & `index.css`**: CSS files for styling the application.
+    *   **`components/`**: This directory contains reusable UI components.
+        *   **`AnalysisForm.js`**: The form where the user enters the stock ticker and chooses the analysis type.
+        *   **`ResultsDisplay.js`**: The component responsible for rendering the Plotly chart and other analysis results.
+        *   **`LoadingSpinner.js`**: A simple loading indicator that is displayed while an analysis is in progress.
+        *   **`ErrorMessage.js`**: Displays specific error messages received from the backend.
+
+## State Management and Data Flow
+
+The application uses React's built-in state management (`useState` and `useEffect` hooks) to manage its data flow.
+
+1.  **State:** The main state is held in the `App.js` component:
+    *   `ticker`: The stock ticker entered by the user.
+    *   `analysis`: The analysis results received from the backend.
+    *   `loading`: A boolean flag to indicate when an analysis is in progress.
+    *   `error`: A string to hold any error messages.
+
+2.  **Data Flow:**
+    *   The user enters a ticker in the `AnalysisForm` component.
+    *   When the form is submitted, the `handleSubmit` function in `App.js` is called.
+    *   `App.js` sends a request to the backend `/analyze` endpoint and receives a `task_id`.
+    *   `App.js` then polls the `/status/<task_id>` endpoint. During this time, the `loading` state is true, and the `LoadingSpinner` is displayed.
+    *   If the backend task fails, the specific error message is received and stored in the `error` state, and the `ErrorMessage` component is displayed.
+    *   If the task succeeds, `App.js` fetches the final results from the `/data` or `/hybrid_data` endpoint and stores them in the `analysis` state.
+    *   The `ResultsDisplay` component receives the `analysis` data as a prop and renders the results.
 
 ---
 
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+(The default Create React App documentation follows...)
