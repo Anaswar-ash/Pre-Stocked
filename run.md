@@ -10,6 +10,7 @@ The backend is a Python Flask application.
 
 *   Python 3.x installed.
 *   `pip` for package management.
+*   Redis server installed and running.
 
 ### Steps
 
@@ -32,6 +33,9 @@ The backend is a Python Flask application.
     ```bash
     pip install -r requirements.txt
     ```
+
+3.  **Set up your environment variables:**
+    Create a `.env` file in the `api` directory and add your credentials. You can use `.env.example` as a template.
 
 ## 2. Frontend Setup
 
@@ -64,13 +68,27 @@ The frontend is a React application.
 
 ## 3. Running the Application
 
-Once both the backend and frontend are set up, you can start the application.
+Once both the backend and frontend are set up, you need to run three processes in separate terminals:
 
-1.  **Navigate back to the project root directory (if you are in the `frontend` directory):**
+1.  **Start the Redis server:**
+
     ```bash
-    cd ..
+    redis-server
     ```
-2.  **Run the Flask server:**
+
+2.  **Start the Celery worker:**
+
+    *   On Windows:
+        ```bash
+        celery -A api.tasks.celery_app worker -l info -P eventlet
+        ```
+
+    *   On macOS and Linux:
+        ```bash
+        celery -A api.tasks.celery_app worker --loglevel=info
+        ```
+
+3.  **Start the Flask server:**
 
     ```bash
     python run.py

@@ -7,29 +7,21 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
 ## Features
 
 *   **Interactive Candlestick Charts:** Visualizes historical stock data with 50-day and 200-day Simple Moving Averages (SMAs).
-*   **ARIMA Price Forecasting:** Generates a 30-day stock price forecast using an ARIMA model.
-*   **Reddit Sentiment Analysis:** Fetches and analyzes posts from Reddit to determine the market sentiment for a given stock.
-*   **Sentiment-Adjusted Forecast:** Adjusts the ARIMA forecast based on the calculated Reddit sentiment.
+*   **Two Analysis Modes:**
+    *   **Simple Analysis:** Generates a 30-day stock price forecast using an ARIMA model and adjusts it based on Reddit sentiment analyzed with VADER.
+    *   **Hybrid Analysis:** A more advanced analysis that combines ARIMA and a Long Short-Term Memory (LSTM) neural network for forecasting, with sentiment analysis powered by FinBERT, a language model specialized for financial text.
 *   **Asynchronous Analysis:** Heavy-duty analysis tasks are run in the background using Celery and Redis, so the UI remains responsive.
 *   **Database Caching:** Caches analysis results in a PostgreSQL database to provide instant results for recent queries.
 
 ## How It Works
 
-1.  **User Input:** The user enters a stock ticker into the web interface.
+1.  **User Input:** The user enters a stock ticker and chooses an analysis type.
 2.  **Background Task:** A Celery background task is initiated to perform the analysis.
-3.  **Data Fetching:** Historical stock data is fetched from Yahoo Finance using `yfinance`.
-4.  **ARIMA Forecast:** An ARIMA model is used to forecast future stock prices. The initial forecast is cached in the database.
-5.  **Reddit Sentiment Analysis:** The application fetches relevant posts from Reddit using the `praw` library and analyzes their sentiment with `vaderSentiment`.
-6.  **Sentiment Adjustment:** The initial ARIMA forecast is adjusted based on the calculated sentiment score.
-7.  **Final Result:** The final, sentiment-adjusted forecast is stored in the database and displayed to the user.
-
-## Hybrid Analysis
-
-This project also includes a more advanced "hybrid" analysis that combines multiple models for a more robust forecast:
-
-*   **LSTM Forecasting:** A Long Short-Term Memory (LSTM) neural network is used for time-series forecasting, offering a more sophisticated alternative to ARIMA.
-*   **FinBERT Sentiment Analysis:** We use FinBERT, a language model specifically pre-trained on financial text, to provide a more nuanced sentiment analysis than the default `vaderSentiment` library.
-*   **Ensemble Model:** The final hybrid forecast is an ensemble of the ARIMA and LSTM models, weighted by the FinBERT sentiment score.
+3.  **Data Fetching:** Historical stock data is fetched from Yahoo Finance.
+4.  **Forecasting:** An ARIMA model and, in hybrid mode, an LSTM model are used to forecast future stock prices.
+5.  **Sentiment Analysis:** The application fetches relevant posts from Reddit and analyzes their sentiment (VADER for simple, FinBERT for hybrid).
+6.  **Ensemble/Adjustment:** The forecast is adjusted based on the calculated sentiment score.
+7.  **Final Result:** The final forecast is stored in the database and displayed to the user.
 
 ## Getting Started
 
@@ -38,6 +30,7 @@ This project also includes a more advanced "hybrid" analysis that combines multi
 *   Python 3.x
 *   PostgreSQL
 *   Redis
+*   Node.js and npm
 *   A Reddit account and API credentials.
 
 ### Installation
@@ -48,35 +41,45 @@ This project also includes a more advanced "hybrid" analysis that combines multi
     cd Pre-Stocked
     ```
 
-2.  **Create a virtual environment and install dependencies:**
+2.  **Backend Setup:**
+    *   Create a virtual environment and activate it.
+    *   Install Python dependencies: `pip install -r requirements.txt`
+    *   Create a `.env` file in the `api` directory with your credentials (use `.env.example` as a template).
+
+3.  **Frontend Setup:**
+    *   Navigate to the `frontend` directory: `cd frontend`
+    *   Install npm dependencies: `npm install`
+    *   Build the React app: `npm run build`
+    *   Navigate back to the root directory: `cd ..`
+
+### Running the Application
+
+You will need to run three processes in separate terminals:
+
+1.  **Start the Redis server:**
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    pip install -r requirements.txt
+    redis-server
     ```
 
-3.  **Set up your environment variables:**
-    Create a `.env` file in the `api` directory and add the following, replacing the placeholder values with your actual credentials:
+2.  **Start the Celery worker:**
+
+    *   On Windows:
+        ```bash
+        celery -A api.tasks.celery_app worker -l info -P eventlet
+        ```
+
+    *   On macOS and Linux:
+        ```bash
+        celery -A api.tasks.celery_app worker --loglevel=info
+        ```
+
+3.  **Start the Flask server:**
+
+    ```bash
+    python run.py
     ```
-    FLASK_SECRET_KEY='a_super_secret_key'
-    DATABASE_URL='postgresql://user:password@host:port/database'
-    REDDIT_CLIENT_ID='your_reddit_client_id'
-    REDDIT_CLIENT_SECRET='your_reddit_client_secret'
-    RED_USER_AGENT='your_reddit_user_agent'
-    CELERY_BROKER_URL='redis://localhost:6379/0'
-    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
-    ```
 
-4.  **Run the database migrations:**
-    The database tables will be created automatically when you first run the application.
-
-5.  **Start the services:**
-    You will need to run the Flask application, Redis server, and a Celery worker.
-    *   **Redis:** `redis-server`
-    *   **Celery Worker:** `celery -A api.tasks.celery_app worker --loglevel=info`
-    *   **Flask App:** `python run.py`
-
-6.  Open your web browser and navigate to `http://127.0.0.1:5000`.
+Open your web browser and navigate to `http://127.0.0.1:5000`.
 
 ## Disclaimer
 
