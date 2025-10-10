@@ -4,6 +4,7 @@ import AnalysisForm from './components/AnalysisForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
+import Logo from './components/Logo';
 
 function App() {
     const [ticker, setTicker] = useState('');
@@ -87,7 +88,7 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                <h1>Stock Analysis</h1>
+                <Logo />
             </header>
             <main>
                 <AnalysisForm

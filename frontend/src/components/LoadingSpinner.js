@@ -2,7 +2,7 @@ import React from 'react';
 
 const LoadingSpinner = () => (
     <div className="loading-spinner">
-        <p>Analyzing...</p>
+        <p>Analysing...</p>
         {/* You can add a more sophisticated spinner animation here */}
     </div>
 );

@@ -10,10 +10,10 @@ const AnalysisForm = ({ handleSubmit, ticker, setTicker, loading, setAnalysisTyp
             required
         />
         <button type="submit" disabled={loading} onClick={() => setAnalysisType('simple')}>
-            {loading ? 'Analyzing...' : 'Analyze'}
+            {loading ? 'Analysing...' : 'Analyze'}
         </button>
         <button type="submit" disabled={loading} onClick={() => setAnalysisType('hybrid')}>
-            {loading ? 'Analyzing...' : 'Hybrid Analyze'}
+            {loading ? 'Analysing...' : 'Hybrid Analyze'}
         </button>
     </form>
 );

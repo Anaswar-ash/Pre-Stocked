@@ -244,7 +244,7 @@ def create_plot(df, forecast, forecast_dates, ticker_symbol):
 
     # Update the layout for a clean, dark theme
     fig.update_layout(
-        title=f'{ticker_symbol.upper()} Stock Price Analysis & Forecast',
+        title=f'Pre-Stocked: {ticker_symbol.upper()} Stock Price Analysis & Forecast',
         xaxis_title='Date',
         yaxis_title='Price (USD)',
         template='plotly_dark',
