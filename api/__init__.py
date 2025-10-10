@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 from .config import Config
 from .database import db_session, init_db, AnalysisResult
-from .tasks import run_full_analysis, run_hybrid_analysis_task
+from .tasks import run_full_analysis, run_hybrid_analysis_task, celery_app
 import datetime
 import os
 
@@ -72,7 +72,7 @@ def task_status(task_id):
     This is an API endpoint that the frontend polls to get updates on the analysis task.
     It returns the task's state (e.g., PENDING, SUCCESS, FAILURE) and any status messages.
     """
-    task = run_full_analysis.AsyncResult(task_id)
+    task = celery_app.AsyncResult(task_id)
     if task.state == 'PENDING':
         response = {'state': task.state, 'status': 'Pending...'}
     elif task.state != 'FAILURE':

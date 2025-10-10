@@ -21,18 +21,7 @@ POST_LIMIT = 25  # Number of posts to fetch from Reddit
 COMMENT_LIMIT = 10  # Number of top comments per post to fetch
 
 # --- INITIALIZATION ---
-# Initialize the Reddit API client (PRAW)
-try:
-    reddit = praw.Reddit(
-        client_id=os.getenv("REDDIT_CLIENT_ID"),
-        client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-        user_agent=os.getenv("RED_USER_AGENT", "SentimentAnalysisWebApp/0.1 by YourUsername"),
-    )
-    # Test the connection to ensure credentials are valid
-    logging.info(f"Connected to Reddit as: {reddit.user.me()}")
-except Exception as e:
-    logging.error(f"Error initializing PRAW: {e}")
-    reddit = None
+
 
 # Initialize the VADER sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
@@ -132,13 +121,37 @@ def classify_sentiment(compound_score):
     else:
         return "Neutral"
 
+from .config import Config
+
+def get_reddit_client():
+    """Creates and returns an authenticated PRAW Reddit client."""
+    try:
+        reddit = praw.Reddit(
+            client_id=Config.REDDIT_CLIENT_ID,
+            client_secret=Config.REDDIT_CLIENT_SECRET,
+            user_agent=Config.RED_USER_AGENT or "SentimentAnalysisWebApp/0.1 by YourUsername",
+        )
+        # Test the connection
+        if reddit.user.me():
+            logging.info(f"Connected to Reddit as: {reddit.user.me()}")
+            return reddit
+        else:
+            logging.error("Reddit authentication failed. Check your credentials in .env")
+            return None
+    except Exception as e:
+        logging.error(f"Error initializing PRAW: {e}")
+        return None
+
+# ... (rest of the file)
+
 def get_reddit_sentiment(ticker_symbol):
     """
     Fetches and analyzes Reddit sentiment for a given stock ticker using a weighted average.
     The sentiment is weighted by the score (upvotes) of the posts and comments.
     """
+    reddit = get_reddit_client()
     if not reddit:
-        return 0, [], "Reddit API not configured. Please check your .env file."
+        return 0, [], "Reddit API not configured or authentication failed."
 
     weighted_scores = []
     analyzed_posts = []

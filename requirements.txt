@@ -13,3 +13,5 @@ SQLAlchemy
 tensorflow
 transformers
 torch
+eventlet
+scikit-learn
