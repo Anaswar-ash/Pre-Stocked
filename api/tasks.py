@@ -2,95 +2,76 @@ from celery import Celery
 from .config import Config
 from . import analysis_engine
 from . import hybrid_analysis
-from .database import db_session, AnalysisResult
-import datetime
+from .database import db_session
+from .exceptions import StockDataError, RedditAPIError, AnalysisError
 
 # Create a Celery application instance.
 # We configure it with the broker and backend URLs from our config file.
 celery_app = Celery(__name__, broker=Config.CELERY_BROKER_URL, backend=Config.CELERY_RESULT_BACKEND)
 
-@celery_app.task(bind=True)
-def run_full_analysis(self, ticker_symbol):
-    """Celery task to run the full stock analysis and store the results in the database.
-
-    This task is executed asynchronously by a Celery worker.
-    It performs the following steps:
-    1. Fetches stock data.
-    2. Calculates technical indicators.
-    3. Generates an ARIMA forecast.
-    4. Stores the initial ARIMA plot in the database.
-    5. Fetches and analyzes Reddit sentiment.
-    6. Adjusts the forecast based on the sentiment.
-    7. Updates the database with the final, sentiment-adjusted results.
-    """
-    # Create a new database session for this task.
-    # It's important to create a new session for each task to ensure thread safety.
-    db = db_session()
-from .exceptions import StockDataError, RedditAPIError, AnalysisError
-
-# ... (imports)
 
 @celery_app.task(bind=True)
 def run_full_analysis(self, ticker_symbol):
     """Celery task to run the full stock analysis..."""
-    db = db_session()
+    db_session()
     try:
         # ... (analysis steps)
-        self.update_state(state='PROGRESS', meta={'status': 'Fetching stock data...'})
+        self.update_state(state="PROGRESS", meta={"status": "Fetching stock data..."})
         info, hist = analysis_engine.get_stock_data(ticker_symbol)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Calculating technical indicators...'})
+        self.update_state(state="PROGRESS", meta={"status": "Calculating technical indicators..."})
         hist = analysis_engine.calculate_technical_indicators(hist)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Generating ARIMA forecast...'})
+        self.update_state(state="PROGRESS", meta={"status": "Generating ARIMA forecast..."})
         forecast, forecast_dates = analysis_engine.forecast_stock_price(hist)
 
         # ... (database update)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Analyzing Reddit sentiment...'})
+        self.update_state(state="PROGRESS", meta={"status": "Analyzing Reddit sentiment..."})
         sentiment, posts, _ = analysis_engine.get_reddit_sentiment(ticker_symbol)
 
         # ... (sentiment adjustment and final plot)
 
-        return {'status': 'complete', 'ticker': ticker_symbol}
+        return {"status": "complete", "ticker": ticker_symbol}
     except (StockDataError, RedditAPIError, AnalysisError) as e:
-        self.update_state(state='FAILURE', meta={'status': str(e)})
-        return {'status': 'failure', 'error': str(e)}
-    except Exception as e:
+        self.update_state(state="FAILURE", meta={"status": str(e)})
+        return {"status": "failure", "error": str(e)}
+    except Exception:
         # Catch any other unexpected errors
-        self.update_state(state='FAILURE', meta={'status': 'An unexpected error occurred.'})
-        return {'status': 'failure', 'error': 'An unexpected error occurred.'}
+        self.update_state(state="FAILURE", meta={"status": "An unexpected error occurred."})
+        return {"status": "failure", "error": "An unexpected error occurred."}
     finally:
         db_session.remove()
+
 
 @celery_app.task(bind=True)
 def run_hybrid_analysis_task(self, ticker_symbol):
     """Celery task to run the hybrid stock analysis..."""
-    db = db_session()
+    db_session()
     try:
         # ... (analysis steps)
-        self.update_state(state='PROGRESS', meta={'status': 'Fetching stock data...'})
+        self.update_state(state="PROGRESS", meta={"status": "Fetching stock data..."})
         info, hist = analysis_engine.get_stock_data(ticker_symbol)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Generating ARIMA forecast...'})
+        self.update_state(state="PROGRESS", meta={"status": "Generating ARIMA forecast..."})
         arima_forecast, forecast_dates = analysis_engine.forecast_stock_price(hist)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Generating LSTM forecast...'})
-        lstm_forecast = hybrid_analysis.forecast_with_lstm(hist)
+        self.update_state(state="PROGRESS", meta={"status": "Generating LSTM forecast..."})
+        hybrid_analysis.forecast_with_lstm(hist)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Analyzing FinBERT sentiment...'})
+        self.update_state(state="PROGRESS", meta={"status": "Analyzing FinBERT sentiment..."})
         _, posts, _ = analysis_engine.get_reddit_sentiment(ticker_symbol)
-        finbert_sentiment = hybrid_analysis.get_finbert_sentiment(posts)
+        hybrid_analysis.get_finbert_sentiment(posts)
 
         # ... (ensemble prediction and plot)
 
-        return {'status': 'complete', 'ticker': ticker_symbol}
+        return {"status": "complete", "ticker": ticker_symbol}
     except (StockDataError, RedditAPIError, AnalysisError) as e:
-        self.update_state(state='FAILURE', meta={'status': str(e)})
-        return {'status': 'failure', 'error': str(e)}
-    except Exception as e:
+        self.update_state(state="FAILURE", meta={"status": str(e)})
+        return {"status": "failure", "error": str(e)}
+    except Exception:
         # Catch any other unexpected errors
-        self.update_state(state='FAILURE', meta={'status': 'An unexpected error occurred during hybrid analysis.'})
-        return {'status': 'failure', 'error': 'An unexpected error occurred during hybrid analysis.'}
+        self.update_state(state="FAILURE", meta={"status": "An unexpected error occurred during hybrid analysis."})
+        return {"status": "failure", "error": "An unexpected error occurred during hybrid analysis."}
     finally:
         db_session.remove()
