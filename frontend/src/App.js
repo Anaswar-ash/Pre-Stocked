@@ -11,6 +11,7 @@ function App() {
     const [analysis, setAnalysis] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [progress, setProgress] = useState('');
     const [analysisType, setAnalysisType] = useState('simple');
 
     const handleSubmit = async (e) => {
@@ -18,6 +19,7 @@ function App() {
         setLoading(true);
         setError('');
         setAnalysis(null);
+        setProgress('');
 
         const formData = new FormData();
         formData.append('ticker', ticker);
@@ -52,23 +54,40 @@ function App() {
     };
 
     const pollTaskStatus = (taskId) => {
+        const startTime = Date.now();
+        const timeout = (analysisType === 'hybrid' ? 5 : 3) * 60 * 1000; // 5 mins for hybrid, 3 for simple
+
         const interval = setInterval(async () => {
+            if (Date.now() - startTime > timeout) {
+                clearInterval(interval);
+                setError('Analysis timed out. Please ensure backend services are running and try again.');
+                setLoading(false);
+                setProgress('');
+                return;
+            }
+
             try {
                 const response = await fetch(`/status/${taskId}`);
                 const data = await response.json();
 
                 if (data.state === 'SUCCESS') {
                     clearInterval(interval);
+                    setProgress('');
                     fetchData(ticker);
                 } else if (data.state === 'FAILURE') {
                     clearInterval(interval);
                     setError(data.status || 'Analysis failed. Please try again.');
                     setLoading(false);
+                    setProgress('');
+                } else if (data.state === 'PROGRESS') {
+                    setProgress(data.status);
                 }
+
             } catch (error) {
                 clearInterval(interval);
                 setError('Failed to get analysis status.');
                 setLoading(false);
+                setProgress('');
             }
         }, 5000);
     };
@@ -101,6 +120,7 @@ function App() {
 
                 {error && <ErrorMessage message={error} />}
                 {loading && <LoadingSpinner />}
+                {progress && <p className="progress-message">{progress}</p>}
                 {analysis && <ResultsDisplay analysis={analysis} ticker={ticker} />}
             </main>
         </div>
