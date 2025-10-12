@@ -17,11 +17,10 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
 
 1.  **User Input:** The user enters a stock ticker and chooses an analysis type.
 2.  **Background Task:** A Celery background task is initiated to perform the analysis.
-3.  **Data Fetching:** Historical stock data is fetched from Yahoo Finance.
-4.  **Forecasting:** An ARIMA model and, in hybrid mode, an LSTM model are used to forecast future stock prices.
-5.  **Sentiment Analysis:** The application fetches relevant posts from Reddit and analyzes their sentiment (VADER for simple, FinBERT for hybrid).
-6.  **Ensemble/Adjustment:** The forecast is adjusted based on the calculated sentiment score.
-7.  **Final Result:** The final forecast is stored in the database and displayed to the user.
+3.  **Data Fetching:** Historical stock data is fetched from Yahoo Finance and relevant posts from Reddit.
+4.  **Forecasting & Sentiment Analysis:** The application uses a combination of models (ARIMA, LSTM, VADER, FinBERT) to forecast future stock prices and analyze sentiment.
+5.  **Ensemble/Adjustment:** The forecast is adjusted based on the calculated sentiment score.
+6.  **Final Result:** The final forecast is stored in the database and displayed to the user.
 
 ## Getting Started
 

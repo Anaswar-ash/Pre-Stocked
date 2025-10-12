@@ -55,8 +55,13 @@
     -   `api/`: Contains the Flask backend.
         -   `__init__.py`: Flask application factory and route definitions.
         -   `tasks.py`: Celery task definitions.
-        -   `analysis_engine.py`: Core logic for simple analysis (ARIMA, VADER).
-        -   `hybrid_analysis.py`: Logic for hybrid analysis (LSTM, FinBERT).
+        -   `analysis/`: Contains the core analysis logic.
+            -   `arima_model.py`: Logic for the ARIMA model.
+            -   `lstm_model.py`: Logic for the LSTM model.
+            -   `sentiment.py`: Logic for sentiment analysis.
+        -   `data/`: Contains the data fetching logic.
+            -   `stock_data.py`: Logic for fetching stock data.
+            -   `reddit_data.py`: Logic for fetching Reddit data.
         -   `database.py`: SQLAlchemy models and database session management.
         -   `exceptions.py`: Custom exception classes for error handling.
     -   `frontend/`: Contains the React frontend application.

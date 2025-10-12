@@ -42,7 +42,13 @@ These exceptions are caught within the Celery tasks (`api/tasks.py`), and the er
 
 *   **`__init__.py`:** Defines the Flask app and its routes (`/analyze`, `/status/<task_id>`, etc.).
 *   **`tasks.py`:** Contains the Celery tasks (`run_full_analysis`, `run_hybrid_analysis_task`) that orchestrate the analysis.
-*   **`analysis_engine.py` & `hybrid_analysis.py`:** Contain the core analysis logic.
+*   **`analysis/`:** Contains the core analysis logic.
+    *   `arima_model.py`: Logic for the ARIMA model.
+    *   `lstm_model.py`: Logic for the LSTM model.
+    *   `sentiment.py`: Logic for sentiment analysis.
+*   **`data/`:** Contains the data fetching logic.
+    *   `stock_data.py`: Logic for fetching stock data.
+    *   `reddit_data.py`: Logic for fetching Reddit data.
 *   **`exceptions.py`:** Defines the custom exception classes.
 *   **`database.py` & `config.py`:** Handle database and application configuration.
 
