@@ -20,3 +20,7 @@ env/
 *.egg-info/
 dist/
 build/
+
+# Caches
+.pre-commit-cache/
+.pytest_cache/
