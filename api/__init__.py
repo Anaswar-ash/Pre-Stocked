@@ -3,6 +3,7 @@ from .config import Config
 from .database import db_session, init_db, AnalysisResult
 from .tasks import run_full_analysis, run_hybrid_analysis_task, celery_app
 from .errors import bad_request, internal_error
+from .utils import validate_ticker
 import datetime
 import os
 
@@ -30,12 +31,11 @@ def serve(path):
 
 
 @app.route("/analyze", methods=["POST"])
+@validate_ticker
 def analyze():
     """Handles the form submission for stock analysis."""
     ticker = request.form.get("ticker").upper()
     analysis_type = request.form.get("analysis_type", "simple")
-    if not ticker or not ticker.isalnum() or not 2 <= len(ticker) <= 5:
-        return bad_request("Invalid ticker symbol.")
 
     cache_time_limit = datetime.datetime.utcnow() - datetime.timedelta(hours=app.config["CACHE_TIME"])
     cached_result = AnalysisResult.query.filter(
@@ -89,11 +89,10 @@ def get_data(ticker):
 
 
 @app.route("/hybrid_analyze", methods=["POST"])
+@validate_ticker
 def hybrid_analyze():
     """Handles the request to start a hybrid analysis task."""
     ticker = request.form.get("ticker").upper()
-    if not ticker or not ticker.isalnum() or not 2 <= len(ticker) <= 5:
-        return bad_request("Invalid ticker symbol.")
 
     task = run_hybrid_analysis_task.delay(ticker)
     return jsonify({"task_id": task.id})
