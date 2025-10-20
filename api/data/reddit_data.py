@@ -1,8 +1,10 @@
-import praw
 import logging
+
+import praw
+
+from ..analysis.sentiment import classify_sentiment, get_sentiment_compound_score
 from ..config import Config
 from ..exceptions import RedditAPIError
-from ..analysis.sentiment import get_sentiment_compound_score, classify_sentiment
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

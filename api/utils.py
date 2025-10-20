@@ -1,6 +1,9 @@
 from functools import wraps
+
 from flask import request
+
 from .errors import bad_request
+
 
 def validate_ticker(f):
     @wraps(f)

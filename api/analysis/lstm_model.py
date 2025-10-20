@@ -1,7 +1,8 @@
 import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.models import Sequential
+
 
 def create_lstm_model(input_shape):
     """Creates a simple LSTM model."""

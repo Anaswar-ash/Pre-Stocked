@@ -1,7 +1,9 @@
 import datetime
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, Text
+
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
+
 from .config import Config
 
 # Create a database engine using the URL from our configuration.

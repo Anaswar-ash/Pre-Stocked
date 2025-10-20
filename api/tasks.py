@@ -1,9 +1,9 @@
 from celery import Celery
+
+from . import analysis_engine, hybrid_analysis
 from .config import Config
-from . import analysis_engine
-from . import hybrid_analysis
 from .database import db_session
-from .exceptions import StockDataError, RedditAPIError, AnalysisError
+from .exceptions import AnalysisError, RedditAPIError, StockDataError
 
 # Create a Celery application instance.
 # We configure it with the broker and backend URLs from our config file.
@@ -11,13 +11,7 @@ celery_app = Celery(__name__, broker=Config.CELERY_BROKER_URL, backend=Config.CE
 
 
 @celery_app.task(bind=True)
-def run_full_analysis(self, ticker_symbol):
-    """Celery task to run the full stock analysis..."""
-    db_session()
-    try:
-        # ... (analysis steps)
-        self.update_state(state="PROGRESS", meta={"status": "Fetching stock data..."})
-        info, hist = analysis_engine.get_stock_data(ticker_symbol)
+        _info, hist = analysis_engine.get_stock_data(ticker_symbol)
 
         self.update_state(state="PROGRESS", meta={"status": "Calculating technical indicators..."})
         hist = analysis_engine.calculate_technical_indicators(hist)

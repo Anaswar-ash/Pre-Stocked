@@ -1,7 +1,9 @@
-import pandas as pd
-from statsmodels.tsa.arima.model import ARIMA
 import itertools
 import logging
+
+import pandas as pd
+from statsmodels.tsa.arima.model import ARIMA
+
 from ..exceptions import AnalysisError
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,7 +26,7 @@ def find_best_arima_order(data):
             if model_fit.aic < best_aic:
                 best_aic = model_fit.aic
                 best_order = order
-        except:
+        except Exception:
             continue
 
     return best_order

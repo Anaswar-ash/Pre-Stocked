@@ -1,6 +1,7 @@
-import yfinance as yf
-import pandas as pd
 import logging
+
+import yfinance as yf
+
 from ..exceptions import StockDataError
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

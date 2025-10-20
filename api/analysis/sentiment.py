@@ -1,5 +1,5 @@
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import pipeline
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 analyzer = SentimentIntensityAnalyzer()
 finbert = pipeline('sentiment-analysis', model='ProsusAI/finbert')

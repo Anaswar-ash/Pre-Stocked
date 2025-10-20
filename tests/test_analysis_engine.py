@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
-from unittest.mock import patch
-from api.analysis_engine import calculate_technical_indicators, get_stock_data, forecast_stock_price
+
+from api.analysis.arima_model import forecast_stock_price
+from api.data.stock_data import calculate_technical_indicators, get_stock_data
 from api.exceptions import StockDataError
 
 
