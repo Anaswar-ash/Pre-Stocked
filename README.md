@@ -59,6 +59,7 @@ You will need to run three processes in separate terminals:
     ```bash
     redis-server
     ```
+    **Note:** If you are on Windows, you will need to install Redis from the official website: https://redis.io/docs/getting-started/installation/install-redis-on-windows/
 
 2.  **Start the Celery worker:**
 
@@ -79,6 +80,17 @@ You will need to run three processes in separate terminals:
     ```
 
 Open your web browser and navigate to `http://127.0.0.1:5000`.
+
+## Changelog
+
+- Improved code quality by fixing all `pylint` and `ruff` errors.
+- Added a custom error handler for more specific error messages.
+- Moved the hardcoded configurations to a separate configuration file.
+- Added more tests to the project to improve the test coverage.
+- Added API documentation to the backend to make it easier for frontend developers to understand and use the API.
+- Updated the `.pre-commit-config.yaml` file to run `ruff` automatically before each commit.
+- Added `HOWTORUN.md` and `TECH.md` files.
+- Added comments to all files to make the code easier to understand.
 
 ## Disclaimer
 
