@@ -7,13 +7,13 @@ def create_plot(df, forecast, forecast_dates, ticker_symbol):
     """
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], name="Close", line=dict(color="blue")))
-    fig.add_trace(go.Scatter(x=df.index, y=df["SMA50"], name="50-Day SMA", line=dict(color="yellow", dash="dash")))
-    fig.add_trace(go.Scatter(x=df.index, y=df["SMA200"], name="200-Day SMA", line=dict(color="red", dash="dash")))
+    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], name="Close", line={"color": "blue"}))
+    fig.add_trace(go.Scatter(x=df.index, y=df["SMA50"], name="50-Day SMA", line={"color": "yellow", "dash": "dash"}))
+    fig.add_trace(go.Scatter(x=df.index, y=df["SMA200"], name="200-Day SMA", line={"color": "red", "dash": "dash"}))
 
     fig.add_trace(
         go.Scatter(
-            x=forecast_dates, y=forecast, name="Sentiment-Adjusted Forecast", line=dict(color="green", dash="dot")
+            x=forecast_dates, y=forecast, name="Sentiment-Adjusted Forecast", line={"color": "green", "dash": "dot"}
         )
     )
 
