@@ -5,6 +5,7 @@ import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import Logo from './components/Logo';
+import Backtesting from './components/Backtesting';
 
 function App() {
     const [ticker, setTicker] = useState('');
@@ -13,6 +14,7 @@ function App() {
     const [error, setError] = useState('');
     const [progress, setProgress] = useState('');
     const [analysisType, setAnalysisType] = useState('simple');
+    const [currentPage, setCurrentPage] = useState('analysis');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -108,20 +110,30 @@ function App() {
         <div className="App">
             <header className="App-header">
                 <Logo />
+                <nav>
+                    <button onClick={() => setCurrentPage('analysis')}>Analysis</button>
+                    <button onClick={() => setCurrentPage('backtesting')}>Backtesting</button>
+                </nav>
             </header>
             <main>
-                <AnalysisForm
-                    handleSubmit={handleSubmit}
-                    ticker={ticker}
-                    setTicker={setTicker}
-                    loading={loading}
-                    setAnalysisType={setAnalysisType}
-                />
+                {currentPage === 'analysis' ? (
+                    <>
+                        <AnalysisForm
+                            handleSubmit={handleSubmit}
+                            ticker={ticker}
+                            setTicker={setTicker}
+                            loading={loading}
+                            setAnalysisType={setAnalysisType}
+                        />
 
-                {error && <ErrorMessage message={error} />}
-                {loading && <LoadingSpinner />}
-                {progress && <p className="progress-message">{progress}</p>}
-                {analysis && <ResultsDisplay analysis={analysis} ticker={ticker} />}
+                        {error && <ErrorMessage message={error} />}
+                        {loading && <LoadingSpinner />}
+                        {progress && <p className="progress-message">{progress}</p>}
+                        {analysis && <ResultsDisplay analysis={analysis} ticker={ticker} />}
+                    </>
+                ) : (
+                    <Backtesting />
+                )}
             </main>
         </div>
     );

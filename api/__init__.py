@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from .config import Config
 from .database import AnalysisResult, db_session, init_db
 from .errors import bad_request, internal_error
-from .tasks import celery_app, run_full_analysis, run_hybrid_analysis_task
+from .tasks import celery_app, run_full_analysis, run_hybrid_analysis_task, run_backtesting_task
 from .utils import validate_ticker
 
 # Create and configure the Flask application
@@ -175,6 +175,36 @@ def get_data(ticker):
         )
     else:
         return jsonify({"arima_plot": None, "sentiment": None, "posts": None})
+
+
+@app.route("/api/backtest", methods=["POST"])
+@validate_ticker
+def backtest():
+    """
+    Handles the request to start a backtesting task.
+    ---
+    parameters:
+      - name: ticker
+        in: formData
+        type: string
+        required: true
+        description: The stock ticker symbol.
+    responses:
+      200:
+        description: The task ID of the backtesting task.
+        schema:
+          type: object
+          properties:
+            task_id:
+              type: string
+              description: The ID of the background task.
+      400:
+        description: Invalid ticker symbol.
+    """
+    ticker = request.form.get("ticker").upper()
+
+    task = run_backtesting_task.delay(ticker)
+    return jsonify({"task_id": task.id})
 
 
 @app.route("/hybrid_analyze", methods=["POST"])
