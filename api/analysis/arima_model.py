@@ -31,7 +31,7 @@ def find_best_arima_order(data):
 
     return best_order
 
-def forecast_stock_price(df, days_to_predict=30):
+def forecast_stock_price(df, steps=30):
     """
     Forecasts the stock price using the best ARIMA model found.
     """
@@ -44,9 +44,9 @@ def forecast_stock_price(df, days_to_predict=30):
         model = ARIMA(df['Close'], order=best_order)
         model_fit = model.fit()
 
-        forecast = model_fit.forecast(steps=days_to_predict)
+        forecast = model_fit.forecast(steps=steps)
 
-        forecast_dates = pd.to_datetime(df.index[-1]) + pd.to_timedelta(range(1, days_to_predict + 1), unit='D')
+        forecast_dates = pd.to_datetime(df.index[-1]) + pd.to_timedelta(range(1, steps + 1), unit='D')
 
         return forecast, forecast_dates
     except Exception as e:

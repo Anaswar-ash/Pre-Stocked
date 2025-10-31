@@ -15,7 +15,7 @@ def create_lstm_model(input_shape):
     model.compile(optimizer='adam', loss='mean_squared_error')
     return model
 
-def forecast_with_lstm(data, days_to_predict=30):
+def forecast_with_lstm(data, steps=30):
     """Forecasts stock prices using an LSTM model."""
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
@@ -36,7 +36,7 @@ def forecast_with_lstm(data, days_to_predict=30):
     forecast = []
     current_input = test_inputs
 
-    for _ in range(days_to_predict):
+    for _ in range(steps):
         predicted_price = model.predict(current_input)
         forecast.append(predicted_price[0, 0])
         current_input = np.append(current_input[:, 1:, :], [[predicted_price]], axis=1)
