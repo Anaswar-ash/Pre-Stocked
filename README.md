@@ -13,6 +13,33 @@ Pre-Stocked is a web-based application that provides in-depth stock analysis by 
 *   **Asynchronous Analysis:** Heavy-duty analysis tasks are run in the background using Celery and Redis, so the UI remains responsive.
 *   **Database Caching:** Caches analysis results in a PostgreSQL database to provide instant results for recent queries.
 
+## Technologies Used
+
+*   **Backend:** Python, Flask, Celery, Redis, PostgreSQL
+*   **Frontend:** React, JavaScript
+*   **Data Science:** Pandas, NumPy, Scikit-learn, Statsmodels, TensorFlow, Keras, NLTK, FinBERT
+*   **APIs:** Yahoo Finance (yfinance), Reddit (PRAW)
+
+## Project Structure
+
+```
+Pre-Stocked/
+├── api/            # Backend Flask application
+│   ├── tasks/      # Celery tasks for async analysis
+│   ├── models.py   # Database models
+│   └── ...
+├── frontend/       # Frontend React application
+│   ├── src/
+│   └── ...
+├── tests/          # Tests for the backend
+├── .gitignore
+├── HOWTORUN.md
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+└── run.py          # Main script to run the application
+```
+
 ## How It Works
 
 1.  **User Input:** The user enters a stock ticker and chooses an analysis type.
@@ -79,6 +106,14 @@ You will need to run three processes in separate terminals:
     ```
 
 Open your web browser and navigate to `http://127.0.0.1:5000`.
+
+## Contributing
+
+Contributions are welcome! Please see `CONTRIBUTING.md` for details.
+
+## License
+
+This project is licensed under the MIT License - see the `LICENSE` file for details.
 
 ## Disclaimer
 
