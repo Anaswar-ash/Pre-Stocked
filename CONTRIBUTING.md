@@ -45,14 +45,3 @@ We follow the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for
 ### JavaScript Styleguide
 
 We follow the [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript).
-
-## Known Issues
-
-*   **UI/UX Polish:** While functional and improved with Bootstrap, the UI could benefit from a more thoughtful design, including better spacing, typography, and a more distinct visual identity.
-*   **Error Handling Granularity:** While custom exceptions are used, the frontend could do a better job of displaying user-friendly error messages for specific failure modes (e.g., "Invalid stock ticker" vs. a generic "Analysis failed").
-
-## Future Improvements
-
-*   **Enhance Test Suite:** Prioritize writing unit tests for the `hybrid_analysis.py` module, mocking the TensorFlow/Keras and Transformers libraries to isolate the logic.
-*   **Refactor Configuration:** Move hardcoded parameters from the analysis modules into the Flask application's configuration.
-*   **Containerize the Application:** Create a `Dockerfile` for the backend and a `docker-compose.yml` file to orchestrate the entire application stack (Flask, React, Redis, Celery, PostgreSQL). This will simplify the local setup process and prepare the application for deployment.

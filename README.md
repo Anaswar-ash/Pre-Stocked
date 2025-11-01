@@ -40,63 +40,6 @@ Pre-Stocked/
 └── run.py          # Main script to run the application
 ```
 
-## System Architecture
-
-The application is built on a modern, asynchronous architecture designed for responsiveness and scalability. It consists of the following key components:
-
-1.  **Flask Web Application (`api/__init__.py`):** A lightweight web server that handles user requests, manages the analysis workflow, and serves the frontend.
-2.  **Celery Distributed Task Queue (`api/tasks.py`):** Heavy computational tasks are offloaded to a Celery worker to run asynchronously.
-3.  **Redis Message Broker:** Used as the message broker for Celery.
-4.  **PostgreSQL Database (`api/database.py`):** Caches analysis results to provide instant results for recent queries.
-5.  **Analysis Engine (`api/analysis_engine.py`):** Contains the core logic for stock data analysis, including data fetching, technical indicators, and ARIMA forecasting.
-6.  **Hybrid Analysis Module (`api/hybrid_analysis.py`):** Contains the logic for the advanced hybrid analysis, including the LSTM model and FinBERT sentiment analysis.
-
-## Code Structure
-
-### Backend (`api/`)
-
-*   **`__init__.py`:** Defines the Flask app and its routes (`/analyze`, `/status/<task_id>`, etc.).
-*   **`tasks.py`:** Contains the Celery tasks (`run_full_analysis`, `run_hybrid_analysis_task`) that orchestrate the analysis.
-*   **`analysis_engine.py` & `hybrid_analysis.py`:** Contain the core analysis logic.
-*   **`exceptions.py`:** Defines the custom exception classes.
-*   **`database.py` & `config.py`:** Handle database and application configuration.
-
-### Frontend (`frontend/src/`)
-
-The frontend is built with React and follows a component-based architecture:
-
-*   **`App.js`:** The main container component that manages state and orchestrates the UI.
-*   **`components/AnalysisForm.js`:** The form for user input.
-*   **`components/ResultsDisplay.js`:** Displays the analysis results.
-*   **`components/LoadingSpinner.js`:** A loading indicator shown during analysis.
-*   **`components/ErrorMessage.js`:** Displays error messages to the user.
-
-## Program Flow
-
-1.  **User Interaction (Frontend):**
-    *   The user interacts with the `AnalysisForm` component to enter a stock ticker and choose an analysis type.
-    *   On submission, a `POST` request is sent to the `/analyze` endpoint.
-
-2.  **Backend Request Handling (Flask):
-    *   The `/analyze` route starts a Celery background task (`run_full_analysis` or `run_hybrid_analysis_task`).
-    *   It returns a `task_id` to the frontend.
-
-3.  **Frontend Polling:**
-    *   The frontend polls the `/status/<task_id>` endpoint every 5 seconds.
-
-4.  **Asynchronous Analysis (Celery):
-    *   The Celery worker executes the task.
-    *   **Error Handling:** If an error occurs (e.g., invalid ticker, Reddit API failure), the task raises a custom exception (`StockDataError`, `RedditAPIError`, etc.). The task's state is set to `FAILURE`, and the error message is stored.
-    *   If successful, the results are stored in the PostgreSQL database.
-
-5.  **Backend Task Status:**
-    *   The `/status/<task_id>` route returns the task's state.
-    *   If the state is `FAILURE`, it returns the specific error message.
-
-6.  **Frontend Display:**
-    *   If the frontend receives a `FAILURE` state, it displays the specific error message to the user using the `ErrorMessage` component.
-    *   If the task is `SUCCESS`ful, the frontend fetches the data from `/data/<ticker>` or `/hybrid_data/<ticker>` and displays it using the `ResultsDisplay` component.
-
 ## How It Works
 
 1.  **User Input:** The user enters a stock ticker and chooses an analysis type.
